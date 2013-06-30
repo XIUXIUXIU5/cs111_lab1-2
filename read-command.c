@@ -18,8 +18,19 @@ make_command_stream (int (*get_next_byte) (void *),
   /* FIXME: Replace this with your implementation.  You may need to
      add auxiliary functions and otherwise modify the source code.
      You can also use external functions defined in the GNU C Library.  */
-  error (1, 0, "command reading not yet implemented");
-  return 0;
+  int buffer_size = 512;
+  int count = 0;
+  char *buffer = (char*) checked_malloc (buffer_size);
+  int c;
+  do 
+  {
+    c = get_next_byte(get_next_byte_argument);
+    char buffer[count++] = (char) c;
+
+    if (count == buffer_size)
+      buffer = checked_grow_alloc (buffer, &buffer_size);
+  } while (c != EOF);
+  printf("%c, %c, %c\n", buffer[0], buffer[count-1], buffer[count]);
 }
 
 command_t

@@ -34,3 +34,9 @@ struct command
     struct command *subshell_command;
   } u;
 };
+struct command_stream
+{
+  char **token;
+  int c;
+};
+
