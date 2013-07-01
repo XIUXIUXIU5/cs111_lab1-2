@@ -1,4 +1,5 @@
 // UCLA CS 111 Lab 1 command internals
+#include <stdlib.h>
 
 enum command_type
   {
@@ -34,9 +35,10 @@ struct command
     struct command *subshell_command;
   } u;
 };
+
 struct command_stream
 {
   char **token;
-  int c;
+  size_t wc;
 };
 
