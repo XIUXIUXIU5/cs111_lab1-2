@@ -39,6 +39,7 @@ struct command
 struct command_stream
 {
   char **token;
+  
   size_t wc;
 };
 
