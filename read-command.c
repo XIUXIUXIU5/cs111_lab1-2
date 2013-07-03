@@ -28,8 +28,8 @@ command_stream_t
 read_buffer (char* buffer, size_t size)
 {
  // printf ("%s\n", buffer);
-  printf ("%zd\n", size);
-  size_t word_count = 512;
+ // printf ("%zd\n", size);
+  size_t word_count = 1024;
   size_t count = 0;
   command_stream_t stream = (command_stream_t) checked_malloc (sizeof(struct command_stream));
   stream->token = (char**) checked_malloc (word_count);
@@ -134,7 +134,7 @@ read_buffer (char* buffer, size_t size)
     
     }
   }
-  printf ("total words %zd\n", stream->wc);
+//  printf ("total words %zd\n", stream->wc);
 // size_t i=0;
 //     for(;i < stream->wc;i++)
 //     printf ("%s\n", stream->token[i]);
@@ -151,7 +151,7 @@ make_command_stream (int (*get_next_byte) (void *),
   /* FIXME: Replace this with your implementation.  You may need to
      add auxiliary functions and otherwise modify the source code.
      You can also use external functions defined in the GNU C Library.  */
-  size_t buffer_size = 512;
+  size_t buffer_size = 1024;
   size_t count = 0;
   char *buffer = (char*) checked_malloc (buffer_size);
   int c = get_next_byte(get_next_byte_argument);
@@ -206,14 +206,13 @@ enum command_state
 command_t
 switch_cmd_order(command_t cur_cmd, command_t *temp_cmd)
 {
-   command_t final_cmd = cur_cmd; 
   if(*temp_cmd == NULL)
-    return NULL;    
+    return cur_cmd;    
   int priority[4] = {2,1,2,3};
  
   (*temp_cmd)->u.command[1] = cur_cmd;
   command_t cmd_left = (*temp_cmd)->u.command[0];
-  final_cmd = *temp_cmd;
+  command_t final_cmd = *temp_cmd;
 
   if(cmd_left->type != SIMPLE_COMMAND && cmd_left->type != SUBSHELL_COMMAND)  
   {
@@ -243,7 +242,7 @@ init_command(void)
 }
 
 command_t 
-push_command_buffer(command_t cur_cmd, char* token){
+attach_cmd(command_t cur_cmd, char* token){
   command_t tempcmd =  checked_malloc(sizeof(struct command));
   if(isEqual(token,";"))
     tempcmd->type = SEQUENCE_COMMAND;
@@ -279,11 +278,11 @@ read_command_stream (command_stream_t s)
 
   while (s->index < s->wc)
   {
-    printf ("count: %zd\n", s->index);
+  //  printf ("count: %zd\n", s->index);
     cur_token = s->token[s->index];
     s->index++;
 
-    printf("%s\n", cur_token);
+ //   printf("%s\n", cur_token);
     if(isEqual(cur_token, "\n"))
       cur_line_num++;
 
@@ -302,6 +301,7 @@ read_command_stream (command_stream_t s)
         fprintf (stderr, "%d: error", cur_line_num);
         exit(1);
       }
+
       else if(isEqual(cur_token, "\n"))
       {
         state = INIT_STATUS;
@@ -314,7 +314,7 @@ read_command_stream (command_stream_t s)
         cur_cmd->u.word = checked_malloc(cur_cmdWordMax);      
         cur_cmd->u.word[cur_cmdWordIndex] = cur_token;
         cur_cmd->u.word[++cur_cmdWordIndex] = NULL;
-         
+
         state = SIMPLE_CMD_STATUS;
       }
       else
@@ -330,10 +330,10 @@ read_command_stream (command_stream_t s)
       if(isEqual(cur_token,"\n")||isEqual(cur_token,";"))
       {
         
-          printf("2222\n");
+         // printf("2222\n");
           cur_cmd = switch_cmd_order(cur_cmd,&temp_cmd);
-          //state = INIT_STATUS;
-          print_command(cur_cmd);
+          state = INIT_STATUS;
+         // print_command(cur_cmd);
           return cur_cmd;
       }
       else if(isEqual(cur_token,"<"))
@@ -346,7 +346,7 @@ read_command_stream (command_stream_t s)
       }
       else if(isWordToken(cur_token))
       {
-        printf("simple_cmd_status %s\n", cur_token);
+        //printf("simple_cmd_status %s\n", cur_token);
         state = SIMPLE_CMD_STATUS;
         if(cur_cmdWordIndex + 1>= cur_cmdWordMax)
         {
@@ -354,13 +354,15 @@ read_command_stream (command_stream_t s)
         }
         cur_cmd->u.word[cur_cmdWordIndex] = cur_token;
         cur_cmd->u.word[++cur_cmdWordIndex] = NULL;
+      //           print_command(cur_cmd);
       } 
       else if(isConnToken(cur_token))
       {
         cur_cmd = switch_cmd_order(cur_cmd,&temp_cmd);
-        temp_cmd = push_command_buffer(cur_cmd, cur_token);
+        temp_cmd = attach_cmd(cur_cmd, cur_token);
         cur_cmd = init_command();
         state = INIT_STATUS;
+    //             print_command(cur_cmd);
       }
       else
       {
@@ -418,7 +420,7 @@ read_command_stream (command_stream_t s)
       else if(isConnToken(cur_token))
       {
         cur_cmd = switch_cmd_order(cur_cmd,&temp_cmd);
-        temp_cmd = push_command_buffer(cur_cmd, cur_token);     
+        temp_cmd = attach_cmd(cur_cmd, cur_token);     
         cur_cmd = init_command();
         state = INIT_STATUS;
       }
@@ -448,7 +450,7 @@ read_command_stream (command_stream_t s)
       else if(isConnToken(cur_token))
       {
         cur_cmd = switch_cmd_order(cur_cmd,&temp_cmd);
-        temp_cmd = push_command_buffer(cur_cmd, cur_token);                 
+        temp_cmd = attach_cmd(cur_cmd, cur_token);                 
         cur_cmd = init_command();
         state = INIT_STATUS;
       }
@@ -480,7 +482,7 @@ read_command_stream (command_stream_t s)
       else if(isConnToken(cur_token))
       {
         cur_cmd = switch_cmd_order(cur_cmd,&temp_cmd);
-        temp_cmd = push_command_buffer(cur_cmd, cur_token);
+        temp_cmd = attach_cmd(cur_cmd, cur_token);
         cur_cmd = init_command();
         state = INIT_STATUS;
       }
